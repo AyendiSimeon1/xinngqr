@@ -1,0 +1,17 @@
+RewriteEngine On
+
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+RewriteRule ^api/short-links/?$ api/short-links.php [QSA,L]
+RewriteRule ^api/short-links/([0-9]+)/?$ api/short-links.php?id=$1 [QSA,L]
+RewriteRule ^api/qr-codes/?$ api/qr-codes.php [QSA,L]
+RewriteRule ^api/qr-codes/([0-9]+)/?$ api/qr-codes.php?id=$1 [QSA,L]
+RewriteRule ^api/pages/?$ api/pages.php [QSA,L]
+RewriteRule ^api/pages/([0-9]+)/?$ api/pages.php?id=$1 [QSA,L]
+RewriteRule ^dashboard/pages/?$ pages.php [QSA,L]
+RewriteRule ^dashboard/pages/([0-9]+)/edit/?$ page_builder.php?id=$1 [QSA,L]
+RewriteRule ^q/([0-9]+)/?$ q.php?id=$1 [QSA,L]
+RewriteRule ^u/([A-Za-z0-9_-]+)/?$ public_page.php?slug=$1 [QSA,L]
+RewriteRule ^([A-Za-z0-9_-]+)/?$ resolve.php?back_half=$1 [QSA,L]

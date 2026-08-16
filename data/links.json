@@ -1,0 +1,34 @@
+{
+  "profile": {
+    "title": "Micony Group",
+    "subtitle": "Pipeline integrity, asset reliability, safety systems and OEM solutions",
+    "logo": ""
+  },
+  "links": [
+    {
+      "title": "Book a Technical Session",
+      "url": "https://example.com/book-session",
+      "enabled": true
+    },
+    {
+      "title": "Register for Webinar",
+      "url": "https://example.com/webinar",
+      "enabled": true
+    },
+    {
+      "title": "Download Company Profile",
+      "url": "https://example.com/profile.pdf",
+      "enabled": true
+    },
+    {
+      "title": "Contact Business Development",
+      "url": "mailto:business@example.com",
+      "enabled": true
+    },
+    {
+      "title": "WhatsApp Us",
+      "url": "https://wa.me/2340000000000",
+      "enabled": true
+    }
+  ]
+}

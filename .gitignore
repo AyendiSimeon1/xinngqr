@@ -1,0 +1,35 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Composer / PHP dependencies
+/vendor/
+composer.lock
+
+# Local runtime data
+/logs/
+/uploads/
+/tmp/
+/cache/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# PHP / web runtime artifacts
+*.log
+*.cache
+coverage/
+
+# Local database export / dev artifacts
+*.sqlite
+*.sqlite3
+
+# Keep public assets tracked when needed, but ignore generated uploads
+uploads/**
+!uploads/.gitkeep

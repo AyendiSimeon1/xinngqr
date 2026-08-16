@@ -1,0 +1,30 @@
+Based on Reddit discussions and G2 reviews, the top pain points with **Linktree** are:
+
+### 🗣️ **Reddit Pain Points**
+
+| Pain Point | Specific Issues |
+|------------|---------------|
+| **Account Support & Access** | Users locked out of accounts with zero help; support "is a joke" and disregards emails  [reddit](https://www.reddit.com/r/Instagram/comments/1mrqdak/avoid_linktree_their_support_is_a_joke_locked_out/); contact form won't submit, shows "Our Bad!" error  [reddit](https://www.reddit.com/r/socialmedia/comments/vfq5u5/linktree_to_use_or_not_to_use/) |
+| **Links Flagged/Blocked** | Fundraising links frequently get flagged by the platform  [reddit](https://www.reddit.com/r/InstagramMarketing/comments/1q72vl2/issues_with_linktree_alternatives/) |
+| **Poor Mobile Experience** | Not user-friendly to create from cellphone; background designs don't update after selection  [linktr](https://linktr.ee/g2dotcom) |
+| **Outages/Reliability** | Past issues with service outages (hours of downtime)  [byburk](https://www.byburk.net/heres-why-you-may-want-to-stop-using-linktree/) |
+
+### 💼 **G2 Pain Points** (4.6/5 rating, 97 reviews)
+
+| Pain Point | Specific Issues |
+|------------|---------------|
+| **Pricing/Value** | "Expensive" with limited customization in free version  [g2](https://www.g2.com/products/linktree/reviews); Pro plan feels overpriced for small creators  [rupa](https://rupa.pro/blog/why-is-linktree-so-expensive/) |
+| **Limited Free Customization** | Advanced customization features locked behind paid plan; generic look without upgrade  [g2](https://www.g2.com/products/linktree/reviews) |
+| **Analytics Limitations** | Only shows account traffic, can't identify visitors; insufficient insights for smaller teams  [g2](https://www.g2.com/products/linktree/reviews) |
+| **Feature Restrictions** | Essential features (custom domains, logo removal, advanced analytics) require paid account  [g2](https://www.g2.com/products/linktree/reviews) |
+| **SEO Impact** | Not SEO-friendly; sends traffic to linktr.ee domain instead of your website, losing SEO value  [wilbrown](https://wilbrown.com/newsletter/%F0%9F%A4%A2-7-reasons-linktree-sucks-and-how-to-replace-it-hint-use-your-website/) |
+| **Limited Integrations** | Wish for more integrations with other systems; no Google Analytics/Facebook Pixel support  [shorttech.co](https://shorttech.co.uk/5-reasons-you-should-stop-using-linktree/) |
+| **No Third-Party App Support** | Cannot add custom links to social badge area; limited template options  [g2](https://www.g2.com/products/linktree/reviews) |
+
+### 🎯 **Most Critical Issues**
+1. **Support is unreliable** (Reddit users completely locked out with no help)
+2. **Free version is too limited** for branding (G2 consensus)
+3. **SEO traffic loss** (sending links to linktr.ee instead of your domain)
+4. **Analytics are shallow** (no visitor identification)
+
+For creators prioritizing branding and SEO, many Reddit users recommend building a custom links page on their own website instead. [reddit](https://www.reddit.com/r/InstagramMarketing/comments/1q72vl2/issues_with_linktree_alternatives/)

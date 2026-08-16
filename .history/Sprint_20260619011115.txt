@@ -1,0 +1,564 @@
+xin.ng Build Sprint Plan
+========================
+
+Source document: xinng-linktree-clone-app-schema.md
+Goal: Build the MVP first, then add monetization and advanced features later.
+
+Core product idea
+-----------------
+xin.ng is a QR-powered Linktree-style app, but pages, links, and QR codes are separate product objects.
+
+- Pages are page-builder surfaces. A page can contain many embedded links and QR code blocks.
+- Links are standalone short links. Their main purpose is creating short, memorable, trackable URLs for teams, campaigns, and marketing. A standalone short link can also be added to one or more pages, and users can create a new short link while editing a page.
+- QR codes are standalone trackable assets. A QR code can point to a page, a short link, or another supported destination, and can also be added to one or more pages.
+
+The MVP can still start with one public page, page links, and one QR code, but the product model should not treat links or QR codes as only children of a page.
+
+Recommended MVP stack
+---------------------
+- Backend: PHP 8+
+- Database: MySQL or MariaDB
+- Frontend: HTML, CSS, JavaScript
+- UI framework: Bootstrap or Tailwind CSS
+- Local environment: XAMPP
+- Payments later: Paystack, Flutterwave, or Stripe
+
+MVP database tables
+-------------------
+Build only these first:
+
+1. users
+2. pages
+3. links
+4. qr_codes
+5. page_views
+6. link_clicks
+7. qr_scans
+
+Do not build subscriptions, teams, custom domains, or advanced uploads until the MVP works end to end.
+
+Sprint 0: Project Setup
+-----------------------
+Objective: Prepare the codebase, database, and app structure.
+
+Tasks:
+1. Confirm the app runs inside XAMPP at the expected local URL.
+2. Create or confirm the MySQL database name.
+3. Import the MVP database tables from the schema.
+4. Confirm config.php connects to MySQL using PDO or mysqli.
+5. Create shared helpers for:
+   - Database connection
+   - Session start
+   - Auth guard
+   - Redirects
+   - Input escaping
+   - CSRF token generation and validation
+6. Create a basic folder structure:
+   - assets/css
+   - assets/js
+   - uploads
+   - includes
+   - actions or controllers if needed
+7. Add a simple app layout/header/footer if the project does not already have one.
+
+Done when:
+- The app loads locally.
+- Database connection works.
+- Shared helper files are ready.
+- No database credentials are hardcoded into public pages except through config.php.
+
+Sprint 1: Authentication
+------------------------
+Objective: Users can register, log in, and log out securely.
+
+Tasks:
+1. Build registration page.
+2. Registration form fields:
+   - Name
+   - Email
+   - Password
+   - Confirm password
+   - Optional page slug
+3. Validate registration:
+   - Name is required.
+   - Email is valid and unique.
+   - Password and confirm password match.
+   - Password meets minimum length.
+   - Slug is unique if provided.
+4. Store password using PHP password_hash().
+5. Generate a UUID for each user.
+6. Create a default page after registration if the user provides a slug.
+7. Build login page.
+8. Validate login with password_verify().
+9. Store user ID in session after login.
+10. Update last_login_at after successful login.
+11. Build logout action.
+12. Protect dashboard routes from guests.
+
+Done when:
+- A user can register.
+- A user can log in.
+- A user can log out.
+- Logged-out users cannot access dashboard pages.
+- Duplicate emails cannot register.
+- Passwords are never stored as plain text.
+
+Sprint 2: Page Setup
+--------------------
+Objective: Users can create and edit their public xin.ng page.
+
+Tasks:
+1. Build dashboard page setup screen.
+2. Page setup fields:
+   - Page title
+   - Bio
+   - Page slug
+   - SEO title
+   - SEO description
+   - Publish/unpublish status
+3. Validate page slug:
+   - Required
+   - Unique
+   - Lowercase
+   - URL-safe characters only
+   - Reserved words blocked, such as login, register, dashboard, admin, qr, l, u
+4. Create page record if the user does not have one.
+5. Update existing page record if it exists.
+6. Show public page URL in dashboard:
+   - Local development: local app URL
+   - Production target: https://xin.ng/u/{slug}
+7. Build public page route:
+   - /u/{slug}
+8. Public page should show:
+   - Page title
+   - Bio
+   - Active links placeholder if no links exist
+   - "powered by xin.ng" branding for MVP
+9. Hide unpublished pages from public visitors.
+
+Done when:
+- A logged-in user can create a public page.
+- A logged-in user can edit the page.
+- Slugs are unique and URL-safe.
+- /u/{slug} loads the correct public page.
+- Unpublished pages do not display publicly.
+
+Sprint 3: Short Link Manager
+----------------------------
+Objective: Users can create short memorable links and place them on their public page.
+
+Tasks:
+1. Build dashboard short link manager.
+2. Add link form fields:
+   - Link title
+   - Link URL
+   - Link type
+   - Description
+   - Position
+   - Active/inactive status
+3. Supported MVP link types:
+   - url
+   - whatsapp
+   - email
+   - phone
+   - payment
+   - social
+4. Validate links:
+   - Title is required.
+   - URL or destination value is required.
+   - URL format is valid for normal links.
+   - MVP link placement belongs to the logged-in user's page.
+5. Build edit short link action.
+6. Build delete short link action.
+7. Build activate/deactivate action for page placement.
+8. Build reorder action for page placement.
+9. Display active page link placements on public page ordered by position.
+10. For public page link buttons, do not link directly to destination URLs.
+11. Use click tracking route:
+   - /l/{link_id}
+
+Done when:
+- User can create a short link.
+- User can edit a short link.
+- User can delete a short link.
+- User can activate or deactivate a link placement on a page.
+- Public page displays only active links.
+- Public link buttons route through /l/{link_id}.
+
+Sprint 4: Link Click Tracking
+-----------------------------
+Objective: Track link clicks before redirecting visitors.
+
+Tasks:
+1. Build /l/{link_id} route.
+2. Find the link by ID.
+3. Confirm the link is active.
+4. Confirm the parent page is published.
+5. Insert a row into link_clicks.
+6. Increment links.click_count.
+7. Capture basic analytics:
+   - page_id
+   - link_id
+   - visitor_id if available
+   - IP address
+   - User agent
+   - Referrer
+   - Device type if simple detection exists
+8. Redirect visitor to the original destination URL.
+9. Handle missing or inactive links with a clean 404 page.
+
+Done when:
+- Clicking a public link records a click.
+- Visitor is redirected to the correct destination.
+- Inactive or missing links do not redirect.
+- Dashboard can show total link clicks.
+
+Sprint 5: QR Code System
+------------------------
+Objective: Generate standalone QR assets that track scans and can be attached to a page.
+
+Tasks:
+1. Create a dashboard QR page.
+2. For MVP, generate or display a QR code for:
+   - /qr/{slug}
+3. Store QR details in qr_codes:
+   - page_id
+   - name
+   - destination_url
+   - qr_image_url if generated as a file
+   - foreground/background colors if supported
+4. Build /qr/{slug} route for the MVP page QR.
+5. /qr/{slug} flow:
+   - Find published page by slug.
+   - Find active QR code for page.
+   - Insert qr_scans record.
+   - Increment qr_codes.scan_count.
+   - Redirect to /u/{slug}.
+6. Display QR preview in dashboard.
+7. Display the trackable QR URL in dashboard.
+8. Preserve the product model that QR codes are standalone assets, even if the MVP stores one QR against one page.
+
+Implementation note:
+- MVP can use an external QR image URL or a PHP QR library.
+- The QR destination must be /qr/{slug}, not /u/{slug}.
+- Future QR codes can target a page, a short link, or another supported destination.
+
+Done when:
+- Dashboard shows a QR code for the user's page.
+- QR code points to /qr/{slug}.
+- Visiting /qr/{slug} records a scan.
+- Visitor is redirected to /u/{slug}.
+- Updating page links does not change the QR route.
+- Future QR codes can target a page, a short link, or another supported destination.
+
+Sprint 6: Page View Tracking
+----------------------------
+Objective: Track public page visits.
+
+Tasks:
+1. On /u/{slug}, record a page view.
+2. Insert into page_views:
+   - page_id
+   - visitor_id if available
+   - IP address
+   - User agent
+   - Referrer
+   - Device type if simple detection exists
+   - Browser and OS if simple detection exists
+3. Avoid tracking dashboard previews as public views.
+4. Avoid storing unnecessary sensitive data.
+5. Add simple duplicate-control if needed:
+   - Optional: do not count repeat views from same visitor within a short time window.
+
+Done when:
+- Public page visits are recorded.
+- Dashboard can show total page views.
+- Dashboard preview does not inflate page views.
+
+Sprint 7: Dashboard Analytics
+-----------------------------
+Objective: Show basic analytics to the user.
+
+Tasks:
+1. Add dashboard stat cards:
+   - Total page views
+   - Total QR scans
+   - Total link clicks
+2. Add link-level analytics:
+   - Link title
+   - Click count
+3. Add QR stats:
+   - QR scan count
+4. Add recent activity if simple:
+   - Latest page views
+   - Latest link clicks
+   - Latest QR scans
+5. Scope all analytics queries to the logged-in user's page.
+6. Ensure users cannot see another user's analytics.
+
+Done when:
+- Dashboard displays page views.
+- Dashboard displays QR scans.
+- Dashboard displays link clicks.
+- Analytics are scoped to the logged-in user.
+
+Sprint 8: Basic Theme Settings
+------------------------------
+Objective: Let users customize the public page appearance.
+
+Tasks:
+1. Decide MVP theme storage:
+   - Either add page_theme_settings table now.
+   - Or add simple theme columns to pages if you want a smaller MVP.
+2. Build dashboard theme page.
+3. Basic theme fields:
+   - Background color
+   - Button color
+   - Text color
+   - Font style
+   - Button style
+4. Save theme settings.
+5. Apply theme settings on /u/{slug}.
+6. Provide sensible defaults.
+7. Keep "powered by xin.ng" visible for MVP.
+
+Done when:
+- User can change basic public page colors.
+- Public page reflects saved theme settings.
+- Page remains readable on mobile and desktop.
+
+Sprint 9: Landing Page
+----------------------
+Objective: Create a clear public marketing entry point.
+
+Tasks:
+1. Build homepage at /.
+2. Use xin.ng brand positioning:
+   - "One live QR code for every link your business needs."
+3. Include sections:
+   - Hero
+   - How it works
+   - Benefits
+   - Use cases
+   - Pricing preview
+   - Login/register actions
+4. Make target users clear:
+   - Small businesses
+   - Event vendors
+   - Churches
+   - Consultants
+   - Restaurants
+   - Real estate agents
+   - Sales teams
+   - Schools
+   - Creators
+   - Freelancers
+5. Keep calls to action focused:
+   - Create your page
+   - Log in
+
+Done when:
+- Visitors understand the product quickly.
+- Register and login are easy to find.
+- Branding consistently says xin.ng and pronunciation can be shown as Xing where useful.
+
+Sprint 10: MVP Security Pass
+----------------------------
+Objective: Tighten security before calling the MVP complete.
+
+Tasks:
+1. Confirm all passwords use password_hash().
+2. Confirm login uses password_verify().
+3. Add CSRF protection to forms that change data.
+4. Escape all output with htmlspecialchars().
+5. Validate all user input.
+6. Confirm every dashboard action checks ownership.
+7. Confirm users cannot edit/delete links or pages they do not own.
+8. Confirm slugs cannot collide with reserved routes.
+9. Confirm sessions are started consistently.
+10. Use secure cookie settings where possible.
+11. Validate uploaded files if uploads exist.
+12. Hide raw database errors from public users.
+
+Done when:
+- No obvious cross-user access bugs exist.
+- Forms have CSRF protection.
+- Public output is escaped.
+- App fails cleanly on invalid input.
+
+Sprint 11: MVP QA Checklist
+---------------------------
+Objective: Test the full user journey.
+
+Manual test flow:
+1. Register a new account.
+2. Log out.
+3. Log back in.
+4. Create or edit public page.
+5. Add three links.
+6. Deactivate one link.
+7. Reorder links.
+8. Visit /u/{slug}.
+9. Confirm only active links display.
+10. Click a public link.
+11. Confirm /l/{link_id} records a click and redirects.
+12. Visit /qr/{slug}.
+13. Confirm QR scan records and redirects to /u/{slug}.
+14. Refresh /u/{slug}.
+15. Confirm page view count increases.
+16. Return to dashboard.
+17. Confirm dashboard analytics show:
+   - Page views
+   - QR scans
+   - Link clicks
+18. Edit a link destination.
+19. Confirm the QR URL did not change.
+20. Test with another user and confirm data isolation.
+
+Done when:
+- Full flow works without manual database edits.
+- A user can complete the MVP acceptance criteria from the Markdown spec.
+
+MVP Acceptance Criteria
+-----------------------
+The MVP is ready when:
+
+1. A user can register.
+2. A user can log in.
+3. A user can log out.
+4. A user can create a public page.
+5. A user can add at least one link.
+6. The public page displays active links.
+7. A QR code is generated for the page.
+8. Scanning or visiting the QR route opens the correct page.
+9. The user can update links without changing the QR code.
+10. Page visits are tracked.
+11. Link clicks are tracked.
+12. QR scans are tracked.
+13. The user can see basic analytics in the dashboard.
+
+Version 2 Sprint: After MVP
+---------------------------
+Start only after the MVP is stable.
+
+Tasks:
+1. Add image uploads:
+   - Profile image
+   - Cover image
+   - QR logo
+2. Add social media icons.
+3. Add link scheduling:
+   - start_at
+   - end_at
+4. Add link thumbnails.
+5. Add QR code download.
+6. Add QR color customization.
+7. Add email verification.
+8. Add password reset.
+9. Add pricing plans.
+10. Add Paystack or Flutterwave payments.
+11. Add plan restrictions:
+   - Max links per page
+   - Basic vs advanced analytics
+   - Remove branding
+   - QR customization
+12. Upgrade links into full standalone short-link objects:
+   - Short memorable slugs
+   - Campaign/team ownership
+   - Tracking route and analytics
+   - Optional placement on one or more pages
+13. Upgrade QR codes into full standalone QR assets:
+   - Destination type: page, short link, or custom URL
+   - Optional placement on one or more pages
+   - Download and styling controls
+
+Version 3 Sprint: Advanced Product
+----------------------------------
+Start only after Version 2 is stable.
+
+Tasks:
+1. Custom domains.
+2. Team accounts.
+3. Multiple pages per user.
+4. Advanced analytics dashboard.
+5. A/B testing.
+6. Lead capture forms.
+7. File downloads.
+8. Booking integrations.
+9. Webhooks.
+10. API access.
+11. Agency dashboard.
+12. Admin moderation dashboard.
+
+Future Product Ideas
+--------------------
+Build later, after the core page builder, short link, QR, analytics, and billing foundations are stable.
+
+1. Shop
+2. Design
+3. Earn
+4. Audience
+5. Insights
+6. Tools
+7. ID
+8. Business cards
+9. Calendar
+10. Social planner
+11. Msg
+12. Instagram auto-reply
+13. URL link shortener
+14. AI post ideas
+
+Admin Panel Sprint
+------------------
+Can be started after the MVP or during Version 2.
+
+Tasks:
+1. View all users.
+2. Suspend users.
+3. Delete abusive pages.
+4. View total pages.
+5. View total QR scans.
+6. View total link clicks.
+7. Manage subscription plans.
+8. Manage themes.
+9. Manage reported pages.
+10. View revenue.
+11. Manually upgrade users.
+
+Important Technical Rules
+-------------------------
+1. Pages, links, and QR codes are separate product objects.
+2. Pages are page-builder surfaces.
+3. Links are standalone short links for memorable, trackable URLs.
+4. QR codes are standalone trackable assets.
+5. Links and QR codes can be added to pages, and can also be created while editing a page.
+6. QR codes must not point directly to their final destination.
+7. MVP page QR codes must point to /qr/{slug}.
+8. /qr/{slug} must record the scan, then redirect to /u/{slug}.
+9. Public page link buttons must point to /l/{link_id}.
+10. /l/{link_id} must record the click, then redirect to the final URL.
+11. Passwords must use PHP password_hash().
+12. Login must use PHP password_verify().
+13. Public page slugs must be unique.
+14. Dashboard actions must always check ownership.
+15. Analytics should avoid storing unnecessary sensitive data.
+16. Use xin.ng as the canonical production domain in public links, QR codes, and dashboard previews.
+17. Keep MVP focused. Do not add payments, teams, or custom domains before the core QR/link flow works.
+
+Suggested Build Order Summary
+-----------------------------
+1. Setup database and shared app helpers.
+2. Build registration, login, logout.
+3. Build page setup.
+4. Build public page.
+5. Build short link manager.
+6. Build click tracking.
+7. Build QR generation and QR scan tracking.
+8. Build page view tracking.
+9. Build dashboard analytics.
+10. Build basic themes.
+11. Build landing page.
+12. Run security pass.
+13. Run MVP QA checklist.
+14. Ship MVP.

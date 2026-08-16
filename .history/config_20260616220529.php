@@ -1,0 +1,45 @@
+<?php
+// QR Link Manager Configuration
+// Change these before uploading publicly.
+
+$APP_NAME = "xin_ng";
+$BRAND_TAGLINE = "Show your self!";
+
+// Default admin password: changeMe123!
+// Generate a new hash at: /admin.php?make_hash=YOUR_NEW_PASSWORD
+$ADMIN_PASSWORD_HASH = '$2y$10$7uL.r0Qr52/V9OaMT03yXuVtCr4f1sW53orhjxiiHQxZw.7UqWpf.';
+
+// Optional: set your final public URL here after upload, e.g. https://yourdomain.com/links/
+// Leave blank to auto-detect current URL.
+$PUBLIC_URL = "localhost/xinngqr/";
+
+// QR code brand label shown under QR image.
+$QR_LABEL = "xinng";
+
+// -------------------------
+// Database configuration
+// Update `DB_USER` / `DB_PASS` for your environment (XAMPP default: root / empty)
+if (!defined('DB_HOST')) define('DB_HOST', 'localhost');
+if (!defined('DB_NAME')) define('DB_NAME', 'xin_ng');
+if (!defined('DB_USER')) define('DB_USER', 'root');
+if (!defined('DB_PASS')) define('DB_PASS', '');
+if (!defined('DB_CHARSET')) define('DB_CHARSET', 'utf8mb4');
+
+function get_db_connection(): ?PDO {
+	static $pdo = null;
+	if ($pdo instanceof PDO) return $pdo;
+	$dsn = 'mysql:host='.DB_HOST.';dbname='.DB_NAME.';charset='.DB_CHARSET;
+	$opts = [
+		PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+		PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+		PDO::ATTR_PERSISTENT => false,
+	];
+	try {
+		$pdo = new PDO($dsn, DB_USER, DB_PASS, $opts);
+		return $pdo;
+	} catch (PDOException $e) {
+		error_log('DB connection failed: '.$e->getMessage());
+		return null;
+	}
+}
+?>
