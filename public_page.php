@@ -69,10 +69,19 @@ if (!empty($pdo) && $pdo instanceof PDO) {
 	}
 }
 if (empty($blocks) && !empty($pdo) && $pdo instanceof PDO) {
-	$stmt = $pdo->prepare('SELECT id, title, description, type, destination_url FROM page_blocks WHERE page_id = ? AND deleted_at IS NULL ORDER BY position ASC, id ASC');
+  $stmt = $pdo->prepare('SELECT id, title, description, type, destination_url, image_path, is_active FROM page_blocks WHERE page_id = ? AND deleted_at IS NULL ORDER BY position ASC, id ASC');
 	$stmt->execute([(int)$page['id']]);
 	$blocks = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
+$blocks = array_values(array_filter($blocks, static fn($block) => ($block['is_active'] ?? true) && trim((string)($block['title'] ?? '')) !== ''));
+
+$socials = [];
+if (!empty($pdo) && $pdo instanceof PDO) {
+  $stmt = $pdo->prepare('SELECT platform, url, is_active FROM page_socials WHERE page_id = ? AND deleted_at IS NULL ORDER BY position ASC, id ASC');
+  $stmt->execute([(int)$page['id']]);
+  $socials = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+$socials = array_values(array_filter($socials, static fn($social) => ($social['is_active'] ?? true) && trim((string)($social['url'] ?? '')) !== ''));
 
 $title = $page['title'] ?? $page['slug'] ?? '';
 $description = $page['description'] ?? ($page['bio'] ?? '');
@@ -194,7 +203,7 @@ $actionCards = array_values(array_filter($actionCards, static fn($action) => !em
     .corp-page { min-height: 100vh; }
     .corp-wrap { width: min(1120px, calc(100% - 48px)); margin: 0 auto; }
 
-    .corp-banner { min-height: 320px; background-size: cover; background-position: center; border-radius: 28px; overflow: hidden; position: relative; margin-bottom: -150px; box-shadow: 0 38px 110px rgba(0, 0, 0, .32); }
+    .corp-banner { min-height: 140px; background-size: cover; background-position: center; border-radius: 28px; overflow: hidden; position: relative; margin-bottom: -60px; box-shadow: 0 38px 110px rgba(0, 0, 0, .32); }
     .corp-banner::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6, 20, 36, .28), rgba(6, 20, 36, .88)); }
     .corp-hero { position: relative; z-index: 2; background: rgba(5, 18, 38, .96); color: #fff; padding: 48px 0 64px; border-radius: 28px; overflow: hidden; }
     .corp-hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
@@ -287,7 +296,7 @@ $actionCards = array_values(array_filter($actionCards, static fn($action) => !em
       .corp-wrap { width: min(100% - 32px, 1000px); }
       .corp-title-row h1 { font-size: 2.4rem; }
       .corp-hero { padding: 36px 0 52px; }
-      .corp-banner { margin-bottom: -120px; }
+      .corp-banner { min-height: 100px; margin-bottom: -40px; }
       .corp-event-inner { flex-direction: column; align-items: flex-start; }
     }
     @media (max-width: 560px) {
@@ -303,7 +312,7 @@ $actionCards = array_values(array_filter($actionCards, static fn($action) => !em
 <body>
   <main class="corp-page">
     <?php if ($corpHeaderPhoto): ?><div class="corp-banner" style="background-image:url('<?= e($corpHeaderPhoto) ?>')"></div><?php endif; ?>
-    <section class="corp-hero"<?= $corpHeaderPhoto ? ' style="background:linear-gradient(180deg,rgba(7,26,46,.78) 0%,rgba(7,26,46,.92) 100%), url(\''.e($corpHeaderPhoto).'\') center/cover no-repeat;"' : '' ?>>
+    <section class="corp-hero">
       <div class="corp-wrap">
         <div class="corp-hero-top">
           <div class="corp-logo-row">
@@ -514,35 +523,60 @@ $actionCards = array_values(array_filter($actionCards, static fn($action) => !em
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?= e($title) ?></title>
   <meta name="description" content="<?= e($description) ?>">
+  <link rel="stylesheet" href="<?= e(xinng_public_base_url()) ?>/assets/dashboard.css">
   <style>
-    :root { font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color-scheme: light; }
-    body { margin: 0; font-family: inherit; background: #f7f7fb; color: #111827; line-height: 1.7; }
-    main { max-width: 840px; margin: 0 auto; padding: 56px 24px 72px; }
-    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 22px; padding: 32px; box-shadow: 0 18px 50px rgba(15, 23, 42, .08); }
-    h1 { margin: 0 0 16px; font-size: 2.4rem; line-height: 1.05; letter-spacing: -.03em; font-weight: 800; color: #0f172a; }
-    p { margin: 0; color: #475569; font-size: 1rem; line-height: 1.8; }
-    .block-list { display: grid; gap: 16px; margin-top: 30px; }
-    .block { display: block; padding: 18px 20px; border: 1px solid #e2e8f0; border-radius: 18px; background: #ffffff; text-decoration: none; color: inherit; transition: transform .18s ease, box-shadow .18s ease; }
-    .block:hover { transform: translateY(-1px); box-shadow: 0 16px 32px rgba(15, 23, 42, .08); }
-    .block strong { display: block; font-size: 1.05rem; margin-bottom: 8px; color: #111827; }
-    .block span { color: #64748b; font-size: .98rem; line-height: 1.7; }
+    :root { font-family: Inter, system-ui, sans-serif; color-scheme: light; }
+    body { margin: 0; background: #f7f7fb; line-height: 1.7; }
+    .pb-page { width: min(420px, 100%); min-height: 100vh; margin: 0 auto; text-align: center; }
+    .pb-page .pb-header { width: 100%; }
+    .pb-page .pb-content { padding-left: 16px; padding-right: 16px; }
   </style>
 </head>
 <body>
-  <main>
-    <div class="card">
-      <h1><?= e($title) ?></h1>
-      <?php if (!empty($description)): ?><p><?= e($description) ?></p><?php endif; ?>
-      <?php if ($blocks): ?>
-        <div class="block-list">
-          <?php $trackingBase = xinng_public_base_url(); ?>
-          <?php foreach ($blocks as $block): ?>
-            <?php $link = trim((string)($block['destination_url'] ?? '')); ?>
-            <?php $trackUrl = $link !== '' ? $trackingBase . '/link.php?id=' . (int)($block['id'] ?? 0) : ''; ?>
-            <?php if ($link !== ''): ?><a class="block" href="<?= e($trackUrl) ?>" target="_blank" rel="noopener"><strong><?= e($block['title'] ?? 'Link') ?></strong><span><?= e($block['description'] ?? '') ?></span></a><?php else: ?><div class="block"><strong><?= e($block['title'] ?? 'Link') ?></strong><span><?= e($block['description'] ?? '') ?></span></div><?php endif; ?>
-          <?php endforeach; ?>
-        </div>
-      <?php endif; ?>
+<?php
+$header = $page['header_mode'] ?? 'color';
+$headerStyle = 'background:' . ($page['header_color'] ?? '#26282C') . ';';
+if ($header === 'gradient') $headerStyle = 'background:linear-gradient(135deg,' . ($page['header_gradient_start'] ?? '#26282C') . ',' . ($page['header_gradient_end'] ?? '#0A9994') . ');';
+if ($header === 'image' && !empty($page['header_image_path'])) {
+	$fit = ($page['header_fit'] ?? 'cover') === 'repeat' ? 'auto' : ($page['header_fit'] ?? 'cover');
+	$repeat = ($page['header_fit'] ?? 'cover') === 'repeat' ? 'repeat' : 'no-repeat';
+	$headerStyle = "background-image:url('" . e($page['header_image_path']) . "');background-size:{$fit};background-repeat:{$repeat};background-position:center;";
+}
+$backgroundStyle = 'background:' . ($page['background_color'] ?? '#FFFAF6') . ';';
+if (($page['background_mode'] ?? 'color') === 'gradient') $backgroundStyle = 'background:linear-gradient(180deg,' . ($page['background_gradient_start'] ?? '#FFFAF6') . ',' . ($page['background_gradient_end'] ?? '#FFFFFF') . ');';
+if (($page['background_mode'] ?? 'color') === 'image' && !empty($page['background_image_path'])) $backgroundStyle = "background-image:url('" . e($page['background_image_path']) . "');background-size:cover;background-position:center;";
+$font = ($page['font'] ?? 'system') === 'system' ? 'Inter,system-ui,sans-serif' : ($page['font'] ?? 'system') . ',Inter,system-ui,sans-serif';
+$blockColor = $page['block_color'] ?? '#0A9994';
+$blockTextColor = $page['block_text_color'] ?? '#FFFAF6';
+$shapeClass = 'shape-' . ($page['block_shape'] ?? 'rounded');
+$shadowClass = 'shadow-' . ($page['block_shadow'] ?? 'soft');
+$socialsHtml = implode('', array_map(static fn($social) => '<span>' . public_social_icon($social['platform'] ?? 'link') . '</span>', $socials));
+?>
+  <main class="pb-page" style="<?= e($backgroundStyle) ?>font-family:<?= e($font) ?>;">
+    <div class="pb-header layout-<?= e($page['layout'] ?? 'simple') ?>" style="<?= e($headerStyle) ?>">
+      <div class="pb-avatar"><?php if ($profile): ?><img src="<?= e($profile) ?>" alt=""><?php else: ?><i class="fa-regular fa-image"></i><?php endif; ?></div>
+    </div>
+    <div class="pb-content">
+      <h2 style="color:<?= e($page['title_color'] ?? '#26282C') ?>"><?= e($title ?: 'Page title') ?></h2>
+      <p style="color:<?= e($page['description_color'] ?? '#26282C') ?>"><?= e($description ?: 'Your page description') ?></p>
+      <?php if (($page['social_placement'] ?? 'top') !== 'bottom'): ?><div class="pb-socials style-<?= e($page['social_icon_style'] ?? 'original') ?>"><?= $socialsHtml ?></div><?php endif; ?>
+      <div class="pb-blocks">
+        <?php foreach ($blocks as $block):
+          $type = $block['type'] ?? 'link';
+          $blockUrl = trim((string)($block['destination_url'] ?? '')) ?: '#';
+          $style = 'color:' . $blockTextColor . ';background:' . $blockColor;
+          $tag = $type === 'text' ? 'div' : 'a';
+        ?>
+          <<?= $tag ?> class="pb-block <?= $type === 'image' ? 'image ' : '' ?><?= e($shapeClass) ?> <?= e($shadowClass) ?>" style="<?= e($style) ?>"<?= $tag === 'a' ? ' href="' . e($blockUrl) . '"' : '' ?>>
+            <?php if ($type === 'image' && !empty($block['image_path'])): ?><img src="<?= e($block['image_path']) ?>" alt=""><?php endif; ?>
+            <strong><?= e($block['title'] ?? 'Link block') ?></strong>
+            <?php if (!empty($block['description']) || in_array($type, ['qr', 'image'], true)): ?><small><?= e($block['description'] ?? '') ?></small><?php endif; ?>
+          </<?= $tag ?>>
+        <?php endforeach; ?>
+        <?php if (!$blocks): ?><div class="pb-empty">Add links, content, bookings, and social blocks to build your personal page.</div><?php endif; ?>
+      </div>
+      <?php if (($page['social_placement'] ?? 'top') === 'bottom'): ?><div class="pb-socials style-<?= e($page['social_icon_style'] ?? 'original') ?>"><?= $socialsHtml ?></div><?php endif; ?>
+      <?php if (empty($page['hide_xinng_logo'])): ?><div class="pb-brand">Powered by xin.ng</div><?php endif; ?>
     </div>
   </main>
 </body>

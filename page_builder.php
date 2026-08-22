@@ -162,7 +162,7 @@ $csrf = csrf_token();
   window.initialPageState = <?= json_encode($state, JSON_UNESCAPED_SLASHES) ?>;
   window.pageBuilderConfig = { csrf: <?= json_encode($csrf) ?>, publicBase: <?= json_encode(rtrim(xinng_public_base_url(), '/')) ?> };
     (function(){
-      // Track simple dirty state and prompt before navigating away
+      // Track simple dirty state without interrupting navigation with browser dialogs
       window.pageBuilderDirty = false;
       const shell = document.querySelector('.builder-shell');
       const setDirty = ()=> { window.pageBuilderDirty = true; };
@@ -178,22 +178,9 @@ $csrf = csrf_token();
       backBtn?.addEventListener('click', (ev)=>{
         ev.preventDefault();
         const dest = 'pages.php';
-        if (!window.pageBuilderDirty) return window.location.href = dest;
-        const shouldSave = confirm('You have unsaved changes. Press OK to save changes before leaving, or Cancel to leave without saving.');
-        if (shouldSave) {
-          const publish = document.getElementById('publish-page');
-          if (publish) {
-            publish.click();
-            setTimeout(()=> { window.location.href = dest; }, 800);
-          } else {
-            window.location.href = dest;
-          }
-        } else {
-          window.location.href = dest;
-        }
+        window.location.href = dest;
       });
 
-      window.addEventListener('beforeunload', function(e){ if (window.pageBuilderDirty) { e.preventDefault(); e.returnValue = ''; } });
     })();
   </script>
   <script src="assets/page-builder.js"></script>

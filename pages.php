@@ -84,7 +84,7 @@ $csrf = csrf_token();
           <a class="nav-item" href="dashboard.php"><span class="nav-icon"><i class="fa-solid fa-link"></i></span>URL Links</a>
           <a class="nav-item active" href="pages.php"><span class="nav-icon"><i class="fa-regular fa-file-lines"></i></span>Pages</a>
           <a class="nav-item" href="qr_codes.php"><span class="nav-icon"><i class="fa-solid fa-qrcode"></i></span>QR Codes</a>
-          <a class="nav-item" href="#"><span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>Insights</a>
+          <a class="nav-item" href="insights.php"><span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>Insights</a>
         </div>
       </nav>
 

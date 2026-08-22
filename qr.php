@@ -42,8 +42,8 @@ $savedQrId = $qrData['saved_qr_id'] ?? null;
         </div>
 
         <div class="landing-actions">
-          <a class="landing-btn landing-btn--primary" href="<?= htmlspecialchars($pngUrl) ?>" download="qr-code.png">Download PNG</a>
-          <a class="landing-btn landing-btn--secondary" href="<?= htmlspecialchars($svgUrl) ?>" download="qr-code.svg">Download SVG</a>
+          <button class="landing-btn landing-btn--primary" id="download-qr-png" type="button">Download PNG</button>
+          <button class="landing-btn landing-btn--secondary" id="download-qr-svg" type="button">Download SVG</button>
         </div>
       </div>
 
@@ -73,5 +73,33 @@ $savedQrId = $qrData['saved_qr_id'] ?? null;
       </aside>
     </section>
   </main>
+  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
+  <script>
+  (function(){
+    if (typeof QRCodeStyling === 'undefined') return;
+    const data = <?= json_encode($destination) ?>;
+    const style = <?= json_encode(strtolower($style)) ?>;
+    const styles = {
+      bold: { dots: 'rounded', color: '#0A9994', background: '#FFFFFF' },
+      minimal: { dots: 'dots', color: '#26282C', background: '#FFFFFF' },
+      standard: { dots: 'square', color: '#000000', background: '#FFFFFF' }
+    };
+    const selected = styles[style] || styles.standard;
+    const qrCode = new QRCodeStyling({
+      width: 600,
+      height: 600,
+      type: 'png',
+      data,
+      qrOptions: { errorCorrectionLevel: 'H' },
+      dotsOptions: { type: selected.dots, color: selected.color },
+      backgroundOptions: { color: selected.background },
+      cornersSquareOptions: { type: selected.dots === 'dots' ? 'dot' : (selected.dots === 'rounded' ? 'extra-rounded' : 'square'), color: selected.color },
+      cornersDotOptions: { type: selected.dots === 'dots' ? 'dot' : (selected.dots === 'rounded' ? 'extra-rounded' : 'square'), color: selected.color }
+    });
+    const download = (extension) => qrCode.download({ name: 'qr-code', extension });
+    document.getElementById('download-qr-png')?.addEventListener('click', () => download('png'));
+    document.getElementById('download-qr-svg')?.addEventListener('click', () => download('svg'));
+  })();
+  </script>
 </body>
 </html>

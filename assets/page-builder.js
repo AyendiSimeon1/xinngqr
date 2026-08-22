@@ -567,8 +567,6 @@
     else if (e.target.id === 'page-type-select') {
       const nextType = e.target.value === 'corporate' ? 'corporate' : 'creator';
       if (nextType === state.page_type) return;
-      const ok = confirm('Changing page type will update templates, labels, and suggested blocks. Existing blocks will remain, but some may be hidden from suggestions if they do not fit the selected mode.');
-      if (!ok) { e.target.value = state.page_type || 'creator'; return; }
       state.page_type = nextType;
     }
     else if (e.target.id === 'header-fit') state.header.fit = e.target.value;
@@ -615,7 +613,7 @@
 
   $('#copy-page-url').addEventListener('click', async () => {
     const url = `${config.publicBase}/${state.slug}`;
-    try { await navigator.clipboard.writeText(url); } catch(e) { alert(url); }
+    try { await navigator.clipboard.writeText(url); } catch(e) { console.error('Unable to copy page URL', e); }
   });
 
   $('#publish-page').addEventListener('click', async () => {
@@ -628,7 +626,7 @@
     });
     const data = await response.json().catch(() => ({ ok:false, error:'Invalid response' }));
     if (data.ok) { dirty = false; button.textContent = 'Published'; $('#builder-url-text').textContent = data.public_url.replace(/^https?:\/\//,''); }
-    else { button.disabled = false; button.textContent = 'Publish changes'; alert(data.error || 'Unable to publish page.'); }
+    else { button.disabled = false; button.textContent = 'Publish changes'; console.error(data.error || 'Unable to publish page.'); }
   });
 
   rerender();

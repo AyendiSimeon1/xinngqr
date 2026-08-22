@@ -119,7 +119,7 @@ $completion = $activePage ? min(100, 45 + (count($qrCodes) * 10) + (!empty($acti
           <a class="nav-item" href="dashboard.php"><span class="nav-icon"><i class="fa-solid fa-link"></i></span>URL Links</a>
           <a class="nav-item" href="pages.php"><span class="nav-icon"><i class="fa-regular fa-file-lines"></i></span>Pages</a>
           <a class="nav-item active" href="qr_codes.php"><span class="nav-icon"><i class="fa-solid fa-qrcode"></i></span>QR Codes</a>
-          <a class="nav-item" href="#"><span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>Insights</a>
+          <a class="nav-item" href="insights.php"><span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>Insights</a>
         </div>
       </nav>
       <div class="setup-card">
@@ -160,7 +160,15 @@ $completion = $activePage ? min(100, 45 + (count($qrCodes) * 10) + (!empty($acti
                 $destination = $qr['destination_url'] ?: $displayUrl;
                 $qrImage = qr_card_image($qr);
               ?>
-              <article class="link-card qr-card" data-id="<?= e($qr['id']) ?>" data-title="<?= e($title) ?>" data-destination-url="<?= e($destination) ?>" data-back-half="<?= e($qr['back_half'] ?? '') ?>">
+                <article class="link-card qr-card" data-id="<?= e($qr['id']) ?>" data-title="<?= e($title) ?>" data-destination-url="<?= e($destination) ?>" data-back-half="<?= e($qr['back_half'] ?? '') ?>" data-qr-design="<?= e(json_encode([
+                  'code_color' => $qr['code_color'] ?? ($qr['foreground_color'] ?? '#000000'),
+                  'background_color' => $qr['background_color'] ?? '#FFFFFF',
+                  'corner_color' => $qr['corner_color'] ?? null,
+                  'pattern_style' => $qr['pattern_style'] ?? 'default',
+                  'corner_style' => $qr['corner_style'] ?? 'square',
+                  'logo_path' => $qr['logo_path'] ?? null,
+                  'remove_xinng_logo' => !empty($qr['remove_xinng_logo']),
+                ], JSON_UNESCAPED_SLASHES)) ?>">
                 <div class="qr-thumb"><img src="<?= e($qrImage) ?>" alt="<?= e($title) ?> QR code"></div>
                 <div>
                   <div class="link-title">
@@ -186,8 +194,7 @@ $completion = $activePage ? min(100, 45 + (count($qrCodes) * 10) + (!empty($acti
                 </div>
                 <div class="link-actions">
                   <a class="action-icon" href="edit_qr_code.php?id=<?= e($qr['id']) ?>" title="Edit"><i class="fa-solid fa-pen"></i></a>
-                  <?php /* TODO: Replace this legacy static download with styled qr-code-styling export from the QR editor. */ ?>
-                  <a class="action-icon" href="<?= e($qrImage) ?>" target="_blank" rel="noopener" title="Open QR code"><i class="fa-solid fa-download"></i></a>
+                  <button class="action-icon download-qr-code" type="button" title="Download QR code" aria-label="Download QR code"><i class="fa-solid fa-download"></i></button>
                   <span class="action-icon" title="Analytics"><i class="fa-solid fa-chart-simple"></i></span>
                   <?php if (!$isProfile): ?><button class="action-icon archive-qr-code" type="button" title="Archive"><i class="fa-solid fa-ellipsis"></i></button><?php endif; ?>
                 </div>
@@ -221,6 +228,7 @@ $completion = $activePage ? min(100, 45 + (count($qrCodes) * 10) + (!empty($acti
     </aside>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
   <script>
   (function(){
     const csrf = '<?= e(csrf_token()) ?>';
@@ -233,6 +241,57 @@ $completion = $activePage ? min(100, 45 + (count($qrCodes) * 10) + (!empty($acti
         return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]);
       });
     }
+
+    function normalizeHex(value, fallback) {
+      value = String(value || '').trim();
+      if (/^#[0-9a-fA-F]{6}$/.test(value)) return value.toUpperCase();
+      if (/^[0-9a-fA-F]{6}$/.test(value)) return '#' + value.toUpperCase();
+      return fallback;
+    }
+
+    function mapDotsType(value) {
+      if (value === 'dots') return 'dots';
+      if (value === 'rounded') return 'rounded';
+      return 'square';
+    }
+
+    function mapCornerType(value) {
+      if (value === 'rounded') return 'extra-rounded';
+      if (value === 'circle') return 'dot';
+      return 'square';
+    }
+
+    function safeFileName(value) {
+      return String(value || 'xinng-qr-code').trim().toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'xinng-qr-code';
+    }
+
+    list.addEventListener('click', (event) => {
+      const download = event.target.closest('.download-qr-code');
+      if (!download || typeof QRCodeStyling === 'undefined') return;
+      const card = download.closest('.qr-card');
+      if (!card) return;
+      const design = JSON.parse(card.dataset.qrDesign || '{}');
+      const codeColor = normalizeHex(design.code_color, '#000000');
+      const backgroundColor = normalizeHex(design.background_color, '#FFFFFF');
+      const cornerColor = normalizeHex(design.corner_color, codeColor);
+      const qrCode = new QRCodeStyling({
+        width: 600,
+        height: 600,
+        type: 'png',
+        data: card.dataset.destinationUrl || '',
+        qrOptions: { errorCorrectionLevel: 'H' },
+        dotsOptions: { type: mapDotsType(design.pattern_style), color: codeColor },
+        backgroundOptions: { color: backgroundColor },
+        cornersSquareOptions: { type: mapCornerType(design.corner_style), color: cornerColor },
+        cornersDotOptions: { type: mapCornerType(design.corner_style), color: cornerColor },
+        image: design.remove_xinng_logo ? undefined : (design.logo_path || 'assets/logo-icon.svg'),
+        imageOptions: { crossOrigin: 'anonymous', margin: 8, imageSize: 0.25 }
+      });
+      download.disabled = true;
+      qrCode.download({ name: safeFileName(card.dataset.title), extension: 'png' })
+        .finally(() => { download.disabled = false; });
+    });
 
     function formCard() {
       const card = document.createElement('article');
